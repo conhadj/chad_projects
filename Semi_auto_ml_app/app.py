@@ -104,14 +104,21 @@ def main():
 				all_columns = df.columns.to_list()
 				column_to_plot = st.selectbox("Select 1 Column", all_columns)
 
-				# Create a Matplotlib figure and axis
-				fig, ax = plt.subplots()
-				pie_data = df[column_to_plot].value_counts()
-				ax.pie(pie_data, labels=pie_data.index, autopct="%1.1f%%", startangle=140)
-				ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+				if df[column_to_plot].dtype == 'object' or df[column_to_plot].nunique() < 50:
+					# Create a Matplotlib figure and axis
+					fig, ax = plt.subplots()
+					pie_data = df[column_to_plot].value_counts()
 
-				# Display the plot using st.pyplot(fig)
-				st.pyplot(fig)
+					# Set the font size for the percentage numbers
+					textprops = {"fontsize": 6}  # Adjust the font size as needed
+
+					ax.pie(pie_data, labels=pie_data.index, autopct="%1.1f%%", startangle=140, textprops=textprops)
+					ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+					# Display the plot using st.pyplot(fig)
+					st.pyplot(fig)
+				else:
+					st.write("Selected column is not suitable for a pie plot. Please select a categorical column with fewer unique values.")
 
 
 
@@ -123,46 +130,45 @@ def main():
 			df = pd.read_csv(data)
 			st.dataframe(df.head())
 
-
 			if st.checkbox("Show Value Counts"):
-				st.write(df.iloc[:,-1].value_counts().plot(kind='bar'))
-				st.pyplot()
-		
+				fig, ax = plt.subplots()
+				df.iloc[:, -1].value_counts().plot(kind='bar', ax=ax)
+				st.pyplot(fig)
+	        
 			# Customizable Plot
-
 			all_columns_names = df.columns.tolist()
-			type_of_plot = st.selectbox("Select Type of Plot",["area","bar","line","hist","box","kde"])
-			selected_columns_names = st.multiselect("Select Columns To Plot",all_columns_names)
+			type_of_plot = st.selectbox("Select Type of Plot", ["area", "bar", "line", "hist", "box", "kde"])
+			selected_columns_names = st.multiselect("Select Columns To Plot", all_columns_names)
 
 			if st.button("Generate Plot"):
-				st.success("Generating Customizable Plot of {} for {}".format(type_of_plot,selected_columns_names))
 
-				# Plot By Streamlit
-				if type_of_plot == 'area':
+				if type_of_plot in ["area", "bar", "line"]:
 					cust_data = df[selected_columns_names]
-					st.area_chart(cust_data)
+					st.success(f"Generating Customizable Plot of {type_of_plot} for {selected_columns_names}")
+					if type_of_plot == 'area':
+						st.area_chart(cust_data)
+					elif type_of_plot == 'bar':
+						st.bar_chart(cust_data)
+					elif type_of_plot == 'line':
+						st.line_chart(cust_data)
+				else:
+					# Check if the selected columns are numeric for histograms, kde, and box plots
+					numeric_columns = df[selected_columns_names].select_dtypes(include='number').columns.tolist()
+					if not numeric_columns:
+						st.error("No numeric columns selected. Please select at least one numeric column for the chosen plot type.")
+					else:
+						st.success(f"Generating Customizable Plot of {type_of_plot} for {numeric_columns}")
+						fig, ax = plt.subplots()
+						df[numeric_columns].plot(kind=type_of_plot, ax=ax)
+						st.pyplot(fig)
 
-				elif type_of_plot == 'bar':
-					cust_data = df[selected_columns_names]
-					st.bar_chart(cust_data)
 
-				elif type_of_plot == 'line':
-					cust_data = df[selected_columns_names]
-					st.line_chart(cust_data)
-
-				# Custom Plot 
-				elif type_of_plot:
-					cust_plot= df[selected_columns_names].plot(kind=type_of_plot)
-					st.write(cust_plot)
-					st.pyplot()
-
-
-	elif choice == 'Model Building':
-		st.subheader("Building ML Models")
-		data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
-		if data is not None:
-			df = pd.read_csv(data)
-			st.dataframe(df.head())
+		elif choice == 'Model Building':
+			st.subheader("Building ML Models")
+			data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
+			if data is not None:
+				df = pd.read_csv(data)
+				st.dataframe(df.head())
 
 
 			# Model Building
