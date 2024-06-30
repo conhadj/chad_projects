@@ -69,6 +69,20 @@ def sample_dataframe(df, max_samples=100000):
     else:
         return df
 
+def check_variable_type(series):
+
+	if series.dtype == 'object':
+		return 'Categorical'
+
+	unique_values = series.nunique()
+
+	if unique_values < 5:
+		return 'Numerical Binary' if unique_values == 2 else 'Numerical Multiclass'
+	elif unique_values <= 20:
+		return 'Mixed'
+	else:
+		return 'Numerical Continuous'
+
 def main():
 	"""Semi Automated ML App with Streamlit """
 
@@ -138,7 +152,7 @@ def main():
 						value_counts.columns = [column_to_plot, 'Count']
 						st.dataframe(value_counts)
 				else:
-					st.write("Selected column is not categorical. Please select a categorical column.")
+					st.write("Selected column is not categorical or discrete numerical. Please select a categorical or discrete numerical column.")
 
 
 	elif choice == 'Plots':
@@ -196,11 +210,22 @@ def main():
 			# Select output column (Y)
 			output_col = st.selectbox("Select Output Column", df.columns)
 
+			# Determine output type before label encoding
+			output_type_before_encoding = check_variable_type(df[output_col])
+			st.write(f"Output Type (Before Encoding): {output_type_before_encoding}")
+
+			# Define ordinal data and ask user if the data is ordinal
+			if output_type_before_encoding == 'Mixed':
+				st.markdown("**Ordinal Data Definition:** Ordinal data is a type of categorical data with a set order or scale to it. For example, rankings, levels, and sizes (small, medium, large).")
+				is_ordinal = st.selectbox("Is the data ordinal?", ["Yes", "No"])
+			else:
+				is_ordinal = "No"
+
 			# Encode categorical columns if they are selected as features
 			categorical_cols = [col for col in df.columns if df[col].dtype == 'object']
 			encoder = LabelEncoder()
-			if output_col in categorical_cols:
-				df[output_col] = encoder.fit_transform(df[output_col])
+			for col in categorical_cols:
+				df[col] = encoder.fit_transform(df[col])
 
 			# Handle missing values
 			missing_info = df.isnull().sum()
@@ -222,136 +247,124 @@ def main():
 
 
 			# Model Building
-			X = df.drop(columns=[output_col])
-			Y = df[output_col]
-	        
-			seed = 30
-			
-			# Determine output type
-			if df[output_col].dtype == 'object':
-				output_type = 'Categorical'
-			else:
-				unique_values = df[output_col].nunique()
-				if unique_values == 2:
-					output_type = 'Numerical Binary'
-				elif unique_values > 2:
-					output_type = 'Numerical Continuous'
-				else:
-					st.warning("Unable to determine the output type. Please check the data.")
-
-			st.write(f"Output Type: {output_type}")
+			# Determine output type after label encoding
+			output_type_after_encoding = check_variable_type(df[output_col])
+			#st.write(f"Output Type (After Encoding): {output_type_after_encoding}")
 
 			# Define appropriate models based on output type
-			if output_type == 'Numerical Binary':
+			models = []
+			removed_models = []
+
+			if output_type_after_encoding in ['Numerical Binary', 'Numerical Multiclass']:
 				models = [
 					('Logistic Regression', LogisticRegression()),
 					('K-Nearest Neighbors', KNeighborsClassifier()),
-					('Support Vector Machine', SVC())
-				]
-				removed_models = [
-					('Linear Discriminant Analysis', 'Not suitable for binary output'),
-					('Decision Tree', 'Not suitable for binary output'),
-					('Gaussian Naive Bayes', 'Not suitable for binary output'),
-					('Random Forest', 'Not suitable for binary output')
-				]
-			elif output_type == 'Numerical Multiclass':
-				models = [
-					('Logistic Regression', LogisticRegression()),
-					('Linear Discriminant Analysis', LinearDiscriminantAnalysis()),
-					('K-Nearest Neighbors', KNeighborsClassifier()),
+					('Support Vector Machine', SVC()),
 					('Decision Tree', DecisionTreeClassifier()),
 					('Gaussian Naive Bayes', GaussianNB()),
-					('Support Vector Machine', SVC()),
 					('Random Forest', RandomForestClassifier())
 				]
-				removed_models = []
-			elif output_type == 'Numerical Continuous':
+				if output_type_after_encoding == 'Numerical Binary':
+					removed_models = [
+						('Linear Discriminant Analysis', 'Not suitable for binary output')
+					]
+				else:
+					models.append(('Linear Discriminant Analysis', LinearDiscriminantAnalysis()))
+			elif output_type_after_encoding == 'Numerical Continuous':
 				models = [
 					('Linear Regression', LinearRegression()),
-					('Polynomial Regression', PolynomialFeatures()),
 					('Support Vector Regression', SVR()),
 					('Decision Tree Regression', DecisionTreeRegressor()),
 					('Random Forest Regression', RandomForestRegressor()),
 					('Gradient Boosting Regression', GradientBoostingRegressor()),
 					('K-Nearest Neighbors Regression', KNeighborsRegressor())
 				]
-				removed_models = [
-					('Logistic Regression', 'Not suitable for continuous output'),
-					('Linear Discriminant Analysis', 'Not suitable for continuous output'),
-					('K-Nearest Neighbors', 'Not suitable for continuous output'),
-					('Decision Tree', 'Not suitable for continuous output'),
-					('Gaussian Naive Bayes', 'Not suitable for continuous output')
-				]
-			else:  # Categorical output
+			elif output_type_after_encoding == 'Mixed' and is_ordinal == "Yes":
 				models = [
-					('Linear Discriminant Analysis', LinearDiscriminantAnalysis()),
+					('Logistic Regression', LogisticRegression()),
 					('K-Nearest Neighbors', KNeighborsClassifier()),
+					('Support Vector Machine', SVC()),
 					('Decision Tree', DecisionTreeClassifier()),
 					('Gaussian Naive Bayes', GaussianNB()),
+					('Random Forest', RandomForestClassifier()),
+					('Linear Regression', LinearRegression()),
+					('Support Vector Regression', SVR()),
+					('Decision Tree Regression', DecisionTreeRegressor()),
+					('Random Forest Regression', RandomForestRegressor())
+				]
+			elif output_type_after_encoding == 'Mixed' and is_ordinal == "No":
+				models = [
+					('Logistic Regression', LogisticRegression()),
+					('K-Nearest Neighbors', KNeighborsClassifier()),
 					('Support Vector Machine', SVC()),
+					('Decision Tree', DecisionTreeClassifier()),
+					('Gaussian Naive Bayes', GaussianNB()),
 					('Random Forest', RandomForestClassifier())
 				]
-				removed_models = [
-					('Logistic Regression', 'Not suitable for categorical output')
-				]
 
-			# Print appropriate and removed models
-			st.write("Appropriate Models:")
-			for model_name, _ in models:
-				st.write(f"- {model_name}")
+			# Display appropriate and removed models with checkboxes
+			st.write("Select models to train:")
+			selected_models = []
+			for model_name, model in models:
+				if st.checkbox(model_name, value=True):
+					selected_models.append((model_name, model))
 
-			if removed_models:
-				st.write("Models Removed:")
-				for model_name, reason in removed_models:
-					st.write(f"- {model_name}: {reason}")
+			st.write("Models not appropriate:")
+			for model_name, reason in removed_models:
+				st.checkbox(model_name + " - " + reason, value=False, disabled=True)
 
-			model_names = []
-			model_mean = []
-			model_std = []
-			all_models = []
-			scoring = 'accuracy'
+			if st.checkbox("Train Selected Models"):
+				X = df.drop(columns=[output_col])
+				Y = df[output_col]
 
-			# Initialize progress bar
-			progress_bar = st.progress(0)
+				model_names = []
+				model_mean = []
+				model_std = []
+				all_models = []
+				scoring = 'accuracy' if output_type_after_encoding != 'Numerical Continuous' else 'r2'
 
-			total_models = len(models)
-	        
-			for i, (name, model) in enumerate(models):
-				try:
-					kfold = KFold(n_splits=10)
-					cv_results = cross_val_score(model, X, Y, cv=kfold, scoring=scoring)
-					model_names.append(name)
-					model_mean.append(cv_results.mean())
-					model_std.append(cv_results.std())
+				# Initialize progress bar
+				progress_bar = st.progress(0)
 
-					accuracy_results = {"model name": name, "model_accuracy": cv_results.mean(), "standard deviation": cv_results.std()}
-					all_models.append(accuracy_results)
+				total_models = len(selected_models)
 
-					# Update the progress bar
-					progress_bar.progress((i + 1) / total_models)
+				for i, (name, model) in enumerate(selected_models):
+					try:
+						kfold = KFold(n_splits=10)
+						cv_results = cross_val_score(model, X, Y, cv=kfold, scoring=scoring)
+						model_names.append(name)
+						model_mean.append(cv_results.mean())
+						model_std.append(cv_results.std())
 
-				except ValueError as e:
-					st.error(f"Error occurred for model {name}: {str(e)}")
-					st.warning(f"Skipping model {name} due to the error.")
+						accuracy_results = {"model name": name, "model_accuracy": cv_results.mean(), "standard deviation": cv_results.std()}
+						print(accuracy_results)
+						all_models.append(accuracy_results)
 
-			# After loop completes, clear the progress bar
-			progress_bar.empty()
+						# Update the progress bar
+						progress_bar.progress((i + 1) / total_models)
 
-			# Display metrics as table
-			if st.checkbox("Metrics As Table"):
-				st.dataframe(pd.DataFrame(zip(model_names, model_mean, model_std), columns=["Algorithm", "Mean of Accuracy", "Std"]))
+					except ValueError as e:
+						st.error(f"Error occurred for model {name}: {str(e)}")
+						st.warning(f"Skipping model {name} due to the error.")
 
-			# Display metrics as JSON
-			if st.checkbox("Metrics As JSON"):
-				st.json(all_models)
+				# After loop completes, clear the progress bar
+				progress_bar.empty()
 
-			# Save results button
-			if st.button("Save Model Results"):
-				result_to_file = json.dumps(all_models)
-				file_name = "model_results.json"
-				writetofile(result_to_file, file_name)
-				st.info(f"Saved Result As: {file_name}")
-				download_file()
+				# Display metrics as table
+				if st.checkbox("Metrics As Table"):
+					st.dataframe(pd.DataFrame(zip(model_names, model_mean, model_std), columns=["Algorithm", "Mean of Accuracy", "Std"]))
+
+				# Display metrics as JSON
+				if st.checkbox("Metrics As JSON"):
+					st.json(all_models)
+
+				# Save results button
+				if st.button("Save Model Results"):
+					result_to_file = json.dumps(all_models)
+					file_name = "model_results.json"
+					writetofile(result_to_file, file_name)
+					st.info(f"Saved Result As: {file_name}")
+					download_file()
 
 
 	elif choice == 'About':
