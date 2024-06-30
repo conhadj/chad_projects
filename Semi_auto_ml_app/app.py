@@ -49,6 +49,9 @@ import pandas as pd
 import json
 
 
+#App name
+st.title("Drag & Drop Semi Auto ML")
+
 def writetofile(text,file_name):
 	with open(os.path.join('downloads',file_name),'w') as f:
 		f.write(text)
