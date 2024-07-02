@@ -27,6 +27,40 @@ def show_value_counts(df):
         value_counts_series = df[column_to_display].value_counts()
         st.write(value_counts_series)
 
+def plot_mean_values(df, column):
+    """Function to plot mean values heatmap for selected column"""
+    unique_values = df[column].unique()
+    colors = ['#5DADE2', '#E0E0E0']
+    
+    num_unique_values = len(unique_values)
+    num_cols = 2  # Adjust this value based on your preferred layout
+    num_rows = (num_unique_values + num_cols - 1) // num_cols  # Calculate the number of rows needed
+
+    fig, ax = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(10, 5 * num_rows))
+
+    # Ensure ax is always a 2D array for easier indexing
+    if num_rows == 1 and num_cols == 1:
+        ax = [[ax]]
+    elif num_rows == 1:
+        ax = [ax]
+    elif num_cols == 1:
+        ax = [[a] for a in ax]
+
+    for i, value in enumerate(unique_values):
+        row = i // num_cols
+        col = i % num_cols
+        data = df[df[column] == value].describe().T
+        sns.heatmap(data[['mean']], annot=True, cmap=colors, linewidths=0.4, linecolor='black', cbar=False, fmt='.2f', ax=ax[row][col])
+        ax[row][col].set_title(f'Mean Values: {value} {column}')
+    
+    # Remove any empty subplots
+    for j in range(i + 1, num_rows * num_cols):
+        row = j // num_cols
+        col = j % num_cols
+        fig.delaxes(ax[row][col])
+
+    fig.tight_layout(pad=2)
+    st.pyplot(fig)
 
 def main_page():
     """Main Page for Dataset Upload and Basic EDA"""
@@ -84,6 +118,14 @@ def main_page():
             else:
                 st.markdown(styled_message("Dataframe has no null values"), unsafe_allow_html=True)
             plot_null_heatmap(df)
+
+        if st.checkbox("Show Mean Values"):
+            columns_with_few_unique_values = [col for col in df.columns if df[col].nunique() <= 10]
+            if columns_with_few_unique_values:
+                column_to_display = st.selectbox("Select Column", columns_with_few_unique_values)
+                plot_mean_values(df, column_to_display)
+            else:
+                st.write("No columns with 10 or fewer unique values found.")
 
 
         # Display the message in a light green box
