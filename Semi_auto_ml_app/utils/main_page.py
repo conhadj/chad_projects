@@ -128,7 +128,7 @@ def main_page():
                 st.write("No columns with 10 or fewer unique values found.")
 
 
-        # Display the message in a light green box
+    # Display the message in a light green box
     if message:
         st.markdown(
             f"""
