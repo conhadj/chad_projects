@@ -3,6 +3,8 @@ import pandas as pd
 import io
 import matplotlib.pyplot as plt
 import seaborn as sns
+from utils.data_utils import determine_feature_type, categorize_columns
+
 
 def styled_message(message):
     """Function to return a styled message"""
@@ -69,63 +71,89 @@ def main_page():
     # Initialize a variable to hold the message
     message = ""
 
-    if 'df' not in st.session_state:
-        uploaded_data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
-        if uploaded_data is not None:
-            df = pd.read_csv(uploaded_data)
-            st.dataframe(df.head())
-            st.session_state['df'] = df
+    # Initialize the empty container
+    placeholder = st.empty()
+
+    # Reset button in the sidebar
+    if st.sidebar.button('Reset Dataset'):
+        if 'df' in st.session_state:
+            del st.session_state['df']
+            placeholder.empty()
+            st.sidebar.success("Dataset reset successfully!")
+            return
         else:
-            st.write("Please upload a dataset to proceed.")
-    else:
-        df = st.session_state['df']
-        st.dataframe(df.head())
-    
-    if 'df' in st.session_state:
-        df = st.session_state['df']
+            st.sidebar.warning("No dataset to reset.")
+        # Return immediately to refresh the UI
+        
 
-        if st.checkbox("Show Shape"):
-            st.write(df.shape)
-
-        if st.checkbox("Show Columns"):
-            all_columns = df.columns.to_list()
-            st.write(all_columns)
-
-        if st.checkbox("Information"):
-            st.markdown(styled_message("Looking into numerical and categorical variables"), unsafe_allow_html=True)
-            buffer = io.StringIO()
-            df.info(buf=buffer)
-            s = buffer.getvalue()
-            st.text(s)
-            
-        if st.checkbox("Description"):
-            st.markdown(styled_message("Looking into numerical features' statistics"), unsafe_allow_html=True)
-            st.write(df.describe())
-
-
-        if st.checkbox("Show Selected Columns"):
-            selected_columns = st.multiselect("Select Columns", df.columns.to_list())
-            new_df = df[selected_columns]
-            st.dataframe(new_df)
-
-        if st.checkbox("Show Value Counts"):
-            show_value_counts(df)
-
-        if st.checkbox("Show Null Counts in a Plot"):
-            st.markdown(styled_message("Seaborn null values heatmap"), unsafe_allow_html=True)
-            if df.isnull().any().any():
-                st.markdown(styled_message("Dataframe has null values"), unsafe_allow_html=True)
+    with placeholder.container():
+        if 'df' not in st.session_state:
+            uploaded_data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
+            if uploaded_data is not None:
+                df = pd.read_csv(uploaded_data)
+                st.dataframe(df.head())
+                st.session_state['df'] = df
             else:
-                st.markdown(styled_message("Dataframe has no null values"), unsafe_allow_html=True)
-            plot_null_heatmap(df)
+                st.write("Please upload a dataset to proceed.")
+        else:
+            df = st.session_state['df']
+            st.dataframe(df.head())
+        
+        if 'df' in st.session_state:
+            df = st.session_state['df']
 
-        if st.checkbox("Show Mean Values"):
-            columns_with_few_unique_values = [col for col in df.columns if df[col].nunique() <= 10]
-            if columns_with_few_unique_values:
-                column_to_display = st.selectbox("Select Column", columns_with_few_unique_values)
-                plot_mean_values(df, column_to_display)
-            else:
-                st.write("No columns with 10 or fewer unique values found.")
+             # Categorize columns into lists based on feature types
+            numerical_discrete_cols, numerical_continuous_cols, categorical_cols = categorize_columns(df)
+            st.session_state['numerical_discrete_cols'] = numerical_discrete_cols
+            st.session_state['numerical_continuous_cols'] = numerical_continuous_cols
+            st.session_state['categorical_cols'] = categorical_cols
+            print("===========================")
+            print(numerical_discrete_cols)
+            print(categorical_cols)
+            print(numerical_continuous_cols)
+
+            if st.checkbox("Show Shape"):
+                st.write(df.shape)
+
+            if st.checkbox("Show Columns"):
+                all_columns = df.columns.to_list()
+                st.write(all_columns)
+
+            if st.checkbox("Information"):
+                st.markdown(styled_message("Looking into numerical and categorical variables"), unsafe_allow_html=True)
+                buffer = io.StringIO()
+                df.info(buf=buffer)
+                s = buffer.getvalue()
+                st.text(s)
+                
+            if st.checkbox("Description"):
+                st.markdown(styled_message("Looking into numerical features' statistics"), unsafe_allow_html=True)
+                st.write(df.describe())
+
+
+            if st.checkbox("Show Selected Columns"):
+                selected_columns = st.multiselect("Select Columns", df.columns.to_list())
+                new_df = df[selected_columns]
+                st.dataframe(new_df)
+
+            if st.checkbox("Show Value Counts"):
+                show_value_counts(df)
+
+            if st.checkbox("Show Null Counts in a Plot"):
+                st.markdown(styled_message("Seaborn null values heatmap"), unsafe_allow_html=True)
+                if df.isnull().any().any():
+                    st.markdown(styled_message("Dataframe has null values"), unsafe_allow_html=True)
+                else:
+                    st.markdown(styled_message("Dataframe has no null values"), unsafe_allow_html=True)
+                plot_null_heatmap(df)
+
+            if st.checkbox("Show Mean Values"):
+                columns_with_few_unique_values = [col for col in df.columns if df[col].nunique() <= 10]
+                if columns_with_few_unique_values:
+                    column_to_display = st.selectbox("Select Column", columns_with_few_unique_values)
+                    plot_mean_values(df, column_to_display)
+                else:
+                    st.write("No columns with 10 or fewer unique values found.")
 
 
     # Display the message in a light green box

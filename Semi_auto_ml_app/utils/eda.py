@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import LabelEncoder
 import feature_engine as fe
+from utils.data_utils import determine_feature_type, categorize_columns
 # from feature_engine.variable_handling import check_all_variables
 
 def styled_message(message):
@@ -14,42 +15,7 @@ def styled_message(message):
     </div>
     """
 
-# Function to determine feature types
-def determine_feature_type(df, col):
-    # Determine data type
-    if df[col].dtype == 'object':
-        return "Categorical"
-    elif pd.api.types.is_numeric_dtype(df[col]):
-        if df[col].nunique() > 10:
-            return "Numerical Continuous"
-        else:
-            if df[col].nunique() == 1:
-                return "Numerical Discrete Single Variate"
-            elif df[col].nunique() == 2:
-                return "Numerical Discrete Binary"
-            else:
-                return "Numerical Discrete"
-    elif pd.api.types.is_datetime64_any_dtype(df[col]):
-        return "Date"
-    else:
-        return "Other"
 
-# Function to categorize columns into different lists based on feature types
-def categorize_columns(df):
-    numerical_discrete_cols = []
-    numerical_continuous_cols = []
-    categorical_cols = []
-
-    for col in df.columns:
-        feature_type = determine_feature_type(df, col)
-        if feature_type == "Numerical Discrete":
-            numerical_discrete_cols.append(col)
-        elif feature_type == "Numerical Continuous":
-            numerical_continuous_cols.append(col)
-        elif feature_type == "Categorical":
-            categorical_cols.append(col)
-
-    return numerical_discrete_cols, numerical_continuous_cols, categorical_cols
 
 def label_encode_categorical_features(df, categorical_cols):
     """
@@ -85,15 +51,14 @@ def run_eda():
 
     st.subheader("Exploratory Data Analysis")
     df = st.session_state['df']
+    
+    numerical_discrete_cols = st.session_state['numerical_discrete_cols']
+    numerical_continuous_cols = st.session_state['numerical_continuous_cols']
+    categorical_cols = st.session_state['categorical_cols']
 
     # Display DataFrame head if available
-    st.write("### Uploaded Data Preview")
     st.dataframe(df.head())
 
-    # Categorize columns into lists based on feature types
-    numerical_discrete_cols, numerical_continuous_cols, categorical_cols = categorize_columns(df)
-    print("===========================")
-    print(categorical_cols)
 
     if st.checkbox("Show Feature Types"):
         st.markdown(styled_message("Numerical Discrete Single Variate: 1 Unique Value \n Numerical Discrete Binary: 2 Unique Values \
@@ -110,40 +75,6 @@ def run_eda():
                 feature_types["Type"].append(feature_type)
 
         st.table(pd.DataFrame(feature_types))
-
-    # Initialize variables to store label encoder results
-    label_enc_complete = st.session_state.get('label_enc_complete', False)
-    df_encoded = st.session_state.get('df_encoded', None)
-    label_mappings = st.session_state.get('label_mappings', None)
-
-    # Button to trigger label encoding
-    if st.button('Run Label Encoder') and not label_enc_complete:
-        df_encoded, label_mappings = label_encode_categorical_features(df.copy(), categorical_cols)
-        st.session_state['label_enc_complete'] = True  # Mark label encoding as complete
-        st.session_state['df_encoded'] = df_encoded  # Store encoded DataFrame in session state
-        st.session_state['label_mappings'] = label_mappings  # Store label mappings in session state
-
-    # Show label encoder results if encoding is complete
-    if st.session_state.get('label_enc_complete', False):
-        if st.checkbox("Show Label Encoder Results"):
-            formatted_results = {
-                'Feature': [],
-                'Encoded Values': [],
-                'Original Values': []
-            }
-            for col in categorical_cols:
-                encoded_values = list(df_encoded[col].unique())
-                original_values = list(label_mappings[col].keys())
-                formatted_results['Feature'].append(col)
-                formatted_results['Encoded Values'].append(encoded_values)
-                formatted_results['Original Values'].append(original_values)
-
-            if len(formatted_results['Feature']) > 10:  # Limiting to 10 rows for demonstration
-                st.table(pd.DataFrame(formatted_results).head(10))
-                st.write(f"Showing first 10 rows out of {len(formatted_results['Feature'])} total rows.")
-            else:
-                st.table(pd.DataFrame(formatted_results))
-
 
     # Moved parts are now in main_page.py
     if st.checkbox("Correlation Plot(Matplotlib)"):
@@ -179,4 +110,52 @@ def run_eda():
                 st.dataframe(value_counts)
         else:
             st.write("Selected column is not categorical or discrete numerical. Please select a categorical or discrete numerical column.")
+
+    # Initialize variables to store label encoder results
+    label_enc_complete = st.session_state.get('label_enc_complete', False)
+    df_encoded = st.session_state.get('df_encoded', None)
+    label_mappings = st.session_state.get('label_mappings', None)
+
+    # Button to trigger label encoding
+    if not label_enc_complete:
+        if st.button('Run Label Encoder'):
+            df_encoded, label_mappings = label_encode_categorical_features(df.copy(), categorical_cols)
+            st.session_state['label_enc_complete'] = True  # Mark label encoding as complete
+            st.session_state['df_encoded'] = df_encoded  # Store encoded DataFrame in session state
+            st.session_state['label_mappings'] = label_mappings  # Store label mappings in session state
+            st.experimental_rerun()  # Rerun to update the UI
+    else:
+        st.markdown("""
+            <style>
+            .css-1cpxqw2 {
+                pointer-events: none;
+                opacity: 0.6;
+                background-color: #a9a9a9 !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+        st.button('Run Label Encoder')
+
+    # Show label encoder results if encoding is complete
+    if st.session_state.get('label_enc_complete', False):
+        if st.checkbox("Show Label Encoder Results"):
+            df_encoded = st.session_state['df_encoded']
+            label_mappings = st.session_state['label_mappings']
+            formatted_results = {
+                'Feature': [],
+                'Encoded Values': [],
+                'Original Values': []
+            }
+            for col in categorical_cols:
+                encoded_values = list(df_encoded[col].unique())
+                original_values = list(label_mappings[col].keys())
+                formatted_results['Feature'].append(col)
+                formatted_results['Encoded Values'].append(encoded_values)
+                formatted_results['Original Values'].append(original_values)
+
+            if len(formatted_results['Feature']) > 10:  # Limiting to 10 rows for demonstration
+                st.table(pd.DataFrame(formatted_results).head(10))
+                st.write(f"Showing first 10 rows out of {len(formatted_results['Feature'])} total rows.")
+            else:
+                st.table(pd.DataFrame(formatted_results))
 

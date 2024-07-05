@@ -2,13 +2,7 @@ import streamlit as st
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-
-def plot_null_heatmap(df):
-    """Function to plot null value heatmap using Seaborn"""
-    st.subheader("Null Value Heatmap")
-    plt.figure(figsize=(10, 6))
-    sns.heatmap(df.isnull(), cbar=False, cmap='viridis', yticklabels=False)
-    st.pyplot()
+import altair as alt
 
 def styled_message(message):
     """Function to return a styled message"""
@@ -58,6 +52,9 @@ def plot_kde_plot(df, selected_columns):
 def run_plots():
     st.subheader("Data Visualization")
     df = st.session_state['df']
+    numerical_discrete_cols = st.session_state['numerical_discrete_cols']
+    numerical_continuous_cols = st.session_state['numerical_continuous_cols']
+    categorical_cols = st.session_state['categorical_cols']
 
     if st.checkbox("Show Value Counts"):
         fig, ax = plt.subplots()
@@ -108,3 +105,28 @@ def run_plots():
                 st.warning("Please select at least one numeric column for the KDE plot.")
             else:
                 plot_kde_plot(df, selected_columns_names)
+
+    st.markdown("----")
+
+    # possible_target_cols = 
+    selected_target_column = st.selectbox("Select Target Column", (numerical_discrete_cols+categorical_cols))
+    possible_y_columns = all_columns_names.copy()
+    if selected_target_column:
+        possible_y_columns.remove(selected_target_column)
+
+    selected_y_column = st.selectbox("Select Column To Plot Against Target", possible_y_columns)
+
+    if st.button("Generate Hist Plot"):
+        if selected_target_column:
+            # Assuming df is your DataFrame
+            chart = alt.Chart(df).mark_bar().encode(
+                x=alt.X(selected_y_column, bin=True),
+                y='count()',
+                color=selected_target_column
+            ).properties(
+                width=600,
+                height=300
+            )
+
+            # Display in Streamlit using st.altair_chart
+            st.altair_chart(chart)
