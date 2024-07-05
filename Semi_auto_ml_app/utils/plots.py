@@ -109,7 +109,7 @@ def run_plots():
     st.markdown("----")
 
     # possible_target_cols = 
-    selected_target_column = st.selectbox("Select Target Column", (numerical_discrete_cols+categorical_cols))
+    selected_target_column = st.selectbox("Select Target Column", all_columns_names)
     possible_y_columns = all_columns_names.copy()
     if selected_target_column:
         possible_y_columns.remove(selected_target_column)
@@ -117,16 +117,20 @@ def run_plots():
     selected_y_column = st.selectbox("Select Column To Plot Against Target", possible_y_columns)
 
     if st.button("Generate Hist Plot"):
-        if selected_target_column:
-            # Assuming df is your DataFrame
-            chart = alt.Chart(df).mark_bar().encode(
-                x=alt.X(selected_y_column, bin=True),
-                y='count()',
-                color=selected_target_column
-            ).properties(
-                width=600,
-                height=300
-            )
+        # Check if selected_target_column is categorical (string type)
+        if df[selected_target_column].dtype == 'object':  
+            # Convert selected_target_column to categorical type
+            df[selected_target_column] = df[selected_target_column].astype('category')
 
-            # Display in Streamlit using st.altair_chart
-            st.altair_chart(chart)
+        # Altair chart creation
+        chart = alt.Chart(df).mark_bar().encode(
+            x=alt.X(selected_y_column, title=selected_y_column),  # Explicitly set the title for x-axis
+            y='count()',
+            color=alt.Color(selected_target_column, type='nominal', title=selected_target_column)  # Explicitly set the title for color legend
+        ).properties(
+            width=600,
+            height=300
+        )
+
+        # Display in Streamlit using st.altair_chart
+        st.altair_chart(chart)
