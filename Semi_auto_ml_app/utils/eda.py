@@ -15,38 +15,6 @@ def styled_message(message):
     </div>
     """
 
-
-
-def label_encode_categorical_features(df, categorical_cols):
-    """
-    Label encodes categorical features in the DataFrame.
-
-    Parameters:
-    -----------
-    df : pandas DataFrame
-        The DataFrame containing the categorical features to be label encoded.
-    
-    categorical_cols : list
-        List of column names that contain categorical features.
-    
-    Returns:
-    --------
-    df : pandas DataFrame
-        Updated DataFrame with label encoded categorical features.
-    
-    label_mappings : dict
-        Dictionary containing mappings of encoded labels to original values for each categorical column.
-    """
-    label_mappings = {}
-
-    le = LabelEncoder()
-    for col in categorical_cols:
-        df[col] = le.fit_transform(df[col])
-        label_mappings[col] = dict(zip(le.classes_, le.transform(le.classes_)))
-
-    return df, label_mappings
-
-
 def run_eda():
 
     st.subheader("Exploratory Data Analysis")
@@ -111,51 +79,5 @@ def run_eda():
         else:
             st.write("Selected column is not categorical or discrete numerical. Please select a categorical or discrete numerical column.")
 
-    # Initialize variables to store label encoder results
-    label_enc_complete = st.session_state.get('label_enc_complete', False)
-    df_encoded = st.session_state.get('df_encoded', None)
-    label_mappings = st.session_state.get('label_mappings', None)
-
-    # Button to trigger label encoding
-    if not label_enc_complete:
-        if st.button('Run Label Encoder'):
-            df_encoded, label_mappings = label_encode_categorical_features(df.copy(), categorical_cols)
-            st.session_state['label_enc_complete'] = True  # Mark label encoding as complete
-            st.session_state['df_encoded'] = df_encoded  # Store encoded DataFrame in session state
-            st.session_state['label_mappings'] = label_mappings  # Store label mappings in session state
-            st.experimental_rerun()  # Rerun to update the UI
-    else:
-        st.markdown("""
-            <style>
-            .css-1cpxqw2 {
-                pointer-events: none;
-                opacity: 0.6;
-                background-color: #a9a9a9 !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-        st.button('Run Label Encoder')
-
-    # Show label encoder results if encoding is complete
-    if st.session_state.get('label_enc_complete', False):
-        if st.checkbox("Show Label Encoder Results"):
-            df_encoded = st.session_state['df_encoded']
-            label_mappings = st.session_state['label_mappings']
-            formatted_results = {
-                'Feature': [],
-                'Encoded Values': [],
-                'Original Values': []
-            }
-            for col in categorical_cols:
-                encoded_values = list(df_encoded[col].unique())
-                original_values = list(label_mappings[col].keys())
-                formatted_results['Feature'].append(col)
-                formatted_results['Encoded Values'].append(encoded_values)
-                formatted_results['Original Values'].append(original_values)
-
-            if len(formatted_results['Feature']) > 10:  # Limiting to 10 rows for demonstration
-                st.table(pd.DataFrame(formatted_results).head(10))
-                st.write(f"Showing first 10 rows out of {len(formatted_results['Feature'])} total rows.")
-            else:
-                st.table(pd.DataFrame(formatted_results))
+    
 

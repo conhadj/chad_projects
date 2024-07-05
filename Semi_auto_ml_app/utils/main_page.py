@@ -102,6 +102,11 @@ def main_page():
         if 'df' in st.session_state:
             df = st.session_state['df']
 
+            # Initialize variables to store label encoder results
+            label_enc_complete = st.session_state.get('label_enc_complete', False)
+            df_encoded = st.session_state.get('df_encoded', None)
+            label_mappings = st.session_state.get('label_mappings', None)
+
              # Categorize columns into lists based on feature types
             numerical_discrete_cols, numerical_continuous_cols, categorical_cols = categorize_columns(df)
             st.session_state['numerical_discrete_cols'] = numerical_discrete_cols

@@ -3,6 +3,7 @@ from utils.main_page import main_page
 from utils.eda import run_eda
 from utils.plots import run_plots
 from utils.model_building import run_model_building
+from utils.data_preprocessing import run_preprocess
 import pandas as pd
 
 # Page configuration
@@ -17,7 +18,7 @@ st.set_page_config(
 def main():
     """Semi Automated ML App with Streamlit"""
     
-    activities = ["Main", "EDA", "Plots", "Model Building", "About"]
+    activities = ["Main", "EDA", "Plots", "Data Preprocessing", "Model Building", "About"]
     choice = st.sidebar.selectbox("Select Activities", activities)
 
     if choice == 'Main':
@@ -32,6 +33,12 @@ def main():
     elif choice == 'Plots':
         if 'df' in st.session_state:
             run_plots()
+        else:
+            st.write("Please upload a dataset from the Main page.")
+
+    elif choice == 'Data Preprocessing':
+        if 'df' in st.session_state:
+            run_preprocess()
         else:
             st.write("Please upload a dataset from the Main page.")
     
