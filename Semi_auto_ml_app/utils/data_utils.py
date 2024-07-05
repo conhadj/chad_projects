@@ -49,7 +49,7 @@ def categorize_columns(df):
 
     for col in df.columns:
         feature_type = determine_feature_type(df, col)
-        if feature_type == "Numerical Discrete" or "Numerical Discrete Single Variate" or "Numerical Discrete Binary":
+        if feature_type == "Numerical Discrete" or feature_type == "Numerical Discrete Single Variate" or feature_type == "Numerical Discrete Binary":
             numerical_discrete_cols.append(col)
         elif feature_type == "Numerical Continuous":
             numerical_continuous_cols.append(col)

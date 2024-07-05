@@ -78,6 +78,9 @@ def main_page():
     if st.sidebar.button('Reset Dataset'):
         if 'df' in st.session_state:
             del st.session_state['df']
+            del st.session_state['label_enc_complete']  # Remove label encoding status
+            del st.session_state['df_encoded']  # Remove encoded DataFrame
+            del st.session_state['label_mappings']  # Remove label mappings
             placeholder.empty()
             st.sidebar.success("Dataset reset successfully!")
             return
@@ -112,10 +115,7 @@ def main_page():
             st.session_state['numerical_discrete_cols'] = numerical_discrete_cols
             st.session_state['numerical_continuous_cols'] = numerical_continuous_cols
             st.session_state['categorical_cols'] = categorical_cols
-            print("===========================")
-            print(numerical_discrete_cols)
-            print(categorical_cols)
-            print(numerical_continuous_cols)
+
 
             if st.checkbox("Show Shape"):
                 st.write(df.shape)

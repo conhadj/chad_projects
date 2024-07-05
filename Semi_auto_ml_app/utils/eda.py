@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.preprocessing import LabelEncoder
 import feature_engine as fe
 from utils.data_utils import determine_feature_type, categorize_columns
 # from feature_engine.variable_handling import check_all_variables
