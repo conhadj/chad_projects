@@ -3,7 +3,7 @@ import pandas as pd
 import io
 import matplotlib.pyplot as plt
 import seaborn as sns
-from utils.data_utils import determine_feature_type, categorize_columns
+from utils.data_utils import categorize_columns
 
 
 def styled_message(message):
@@ -73,21 +73,35 @@ def main_page():
 
     # Initialize the empty container
     placeholder = st.empty()
-
+    
     # Reset button in the sidebar
     if st.sidebar.button('Reset Dataset'):
+
         if 'df' in st.session_state:
-            del st.session_state['df']
-            del st.session_state['label_enc_complete']  # Remove label encoding status
-            del st.session_state['df_encoded']  # Remove encoded DataFrame
-            del st.session_state['label_mappings']  # Remove label mappings
-            placeholder.empty()
+            # List of keys to delete from session state
+            keys_to_delete = [
+                'df', 
+                'label_enc_complete', 
+                'df_encoded', 
+                'label_mappings', 
+                'numerical_discrete_cols', 
+                'numerical_continuous_cols', 
+                'categorical_cols'
+            ]
+
+            # Delete each key if it exists in session state
+            for key in keys_to_delete:
+                if key in st.session_state:
+                    del st.session_state[key]
+
             st.sidebar.success("Dataset reset successfully!")
-            return
+            st.experimental_rerun()  # Rerun the app to reflect changes
+            return  # Return immediately to refresh the UI
         else:
             st.sidebar.warning("No dataset to reset.")
+
         # Return immediately to refresh the UI
-        
+        return
 
     with placeholder.container():
         if 'df' not in st.session_state:

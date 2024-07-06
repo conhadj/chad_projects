@@ -7,19 +7,20 @@ def sample_dataframe(df, max_samples=100000):
 	else:
 		return df
 
-def check_variable_type(series):
+def check_variable_type(df, col):
 
-	if series.dtype == 'object':
-		return 'Categorical'
+    if df[col].dtype == 'object':
+        return 'Categorical'
 
-	unique_values = series.nunique()
+    unique_values = df[col].nunique()
+    print(unique_values)
 
-	if unique_values < 5:
-		return 'Numerical Binary' if unique_values == 2 else 'Numerical Multiclass'
-	elif unique_values <= 20:
-		return 'Mixed'
-	else:
-		return 'Numerical Continuous'
+    if unique_values < 5:
+        return 'Numerical Binary' if unique_values == 2 else 'Numerical Multiclass'
+    elif unique_values <= 20:
+        return 'Mixed'
+    else:
+        return 'Numerical Continuous'
 
 # Function to determine feature types
 def determine_feature_type(df, col):
