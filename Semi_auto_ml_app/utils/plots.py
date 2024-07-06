@@ -52,6 +52,8 @@ def plot_kde_plot(df, selected_columns):
 def run_plots():
     st.subheader("Data Visualization")
     df = st.session_state['df']
+
+    #Get the col types lists from st.session
     numerical_discrete_cols = st.session_state['numerical_discrete_cols']
     numerical_continuous_cols = st.session_state['numerical_continuous_cols']
     categorical_cols = st.session_state['categorical_cols']
@@ -108,7 +110,6 @@ def run_plots():
 
     st.markdown("----")
 
-    # possible_target_cols = 
     selected_target_column = st.selectbox("Select Target Column", all_columns_names)
     possible_y_columns = all_columns_names.copy()
     if selected_target_column:

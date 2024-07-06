@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import feature_engine as fe
-from utils.data_utils import determine_feature_type, categorize_columns
+from utils.data_utils import determine_feature_type
 # from feature_engine.variable_handling import check_all_variables
 
 def styled_message(message):
@@ -19,6 +19,7 @@ def run_eda():
     st.subheader("Exploratory Data Analysis")
     df = st.session_state['df']
     
+    #Get the col types lists from st.session
     numerical_discrete_cols = st.session_state['numerical_discrete_cols']
     numerical_continuous_cols = st.session_state['numerical_continuous_cols']
     categorical_cols = st.session_state['categorical_cols']

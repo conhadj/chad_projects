@@ -1,15 +1,20 @@
 import streamlit as st
 import pandas as pd
 import json
-from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import KFold, cross_val_score
-
-from utils.data_utils import sample_dataframe, determine_feature_type
+from utils.data_utils import sample_dataframe, check_variable_type
 from utils.file_utils import writetofile, download_file
-from utils.model_utils import get_models
+from utils.model_utils import get_models  # Import your get_models function from model_utils.py
+from utils.data_utils import sample_dataframe, determine_feature_type
 
 def run_model_building():
     st.subheader("Building ML Models")
+    
+    # Check if 'df' is in session state
+    if 'df' not in st.session_state:
+        st.error("No dataset found. Please upload a dataset on the main page.")
+        return
+
     df = st.session_state['df']
 
     # Sample the dataframe if it's too large
@@ -23,41 +28,17 @@ def run_model_building():
     st.write(f"Output Type (Before Encoding): {output_type_before_encoding}")
 
     # Define ordinal data and ask user if the data is ordinal
-    if output_type_before_encoding == 'Mixed':
+    if output_type_before_encoding == 'Categorical' or output_type_before_encoding == 'Numerical Discrete Binary' or output_type_before_encoding == 'Numerical Discrete' :
         st.markdown("**Ordinal Data Definition:** Ordinal data is a type of categorical data with a set order or scale to it. For example, rankings, levels, and sizes (small, medium, large).")
         is_ordinal = st.selectbox("Is the data ordinal?", ["Yes", "No"])
     else:
         is_ordinal = "No"
 
-    # Encode categorical columns if they are selected as features
-    categorical_cols = [col for col in df.columns if df[col].dtype == 'object']
-    encoder = LabelEncoder()
-    for col in categorical_cols:
-        df[col] = encoder.fit_transform(df[col])
-
-    # Handle missing values
-    missing_info = df.isnull().sum()
-    columns_with_missing = missing_info[missing_info > 0].index.tolist()
-    if columns_with_missing:
-        st.write("Columns with missing values and the count of missing values:")
-        st.write(missing_info[missing_info > 0])
-
-        numeric_cols = df.select_dtypes(include='number').columns
-        categorical_cols = df.select_dtypes(include='object').columns
-
-        num_imputer = SimpleImputer(strategy='mean')
-        cat_imputer = SimpleImputer(strategy='most_frequent')
-
-        df[numeric_cols] = num_imputer.fit_transform(df[numeric_cols])
-        df[categorical_cols] = cat_imputer.fit_transform(df[categorical_cols])
-
-        st.write(f"Missing values were handled: Numeric columns were filled with mean values, and categorical columns were filled with the most frequent values.")
-
-    # Model Building
     # Determine output type after label encoding
     output_type_after_encoding = check_variable_type(df[output_col])
+    st.write(f"Output Type (After Encoding): {output_type_after_encoding}")
 
-    # Get models based on output type and ordinality
+    # Get models based on output type and ordinality (if applicable)
     models, removed_models = get_models(output_type_after_encoding, is_ordinal)
 
     # Display appropriate and removed models with checkboxes
@@ -123,3 +104,4 @@ def run_model_building():
             writetofile(result_to_file, file_name)
             st.info(f"Saved Result As: {file_name}")
             download_file()
+
