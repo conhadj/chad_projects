@@ -13,7 +13,6 @@ def check_variable_type(df, col):
         return 'Categorical'
 
     unique_values = df[col].nunique()
-    print(unique_values)
 
     if unique_values < 5:
         return 'Numerical Binary' if unique_values == 2 else 'Numerical Multiclass'

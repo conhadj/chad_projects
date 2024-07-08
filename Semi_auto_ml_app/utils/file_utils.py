@@ -48,7 +48,7 @@ def load_dataset():
 
         selected_dataset = st.sidebar.selectbox("Select a Dataset", datasets_list)
         if selected_dataset:
-            st.info(f"Dataset '{selected_dataset}' selected.")
+            st.info(f"Dataset '{selected_dataset}' selected. Confirm selection in the sidebar to proceed.")
             return selected_dataset  # Return the dataset name for confirmation
 
         return None
