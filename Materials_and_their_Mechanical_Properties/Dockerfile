@@ -8,11 +8,10 @@ WORKDIR /app
 COPY . /app
 
 # Install any needed packages specified in requirements.txt
-# (you may adjust this depending on your actual dependencies)
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the port that Streamlit runs on (default is 8501)
 EXPOSE 8080
 
 # Set the default command to your app.py
-CMD streamlit run --server.port 8080 --server.enableCORS false app.py
+CMD ["streamlit", "run", "--server.port=8080", "--server.enableCORS=false", "🏠_Main.py"]
