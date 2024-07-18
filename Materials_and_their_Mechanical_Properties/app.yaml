@@ -1,4 +1,3 @@
-service: streamlit-materials-app
 runtime: custom
 env: flex
 automatic_scaling:
