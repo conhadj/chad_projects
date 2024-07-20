@@ -17,15 +17,35 @@ def perform_correlation_analysis(df):
     return correlation_matrix
 
 def perform_t_test(df):
+    if not np.issubdtype(df['Use'].dtype, np.number):
+        st.warning("The column 'Use' was not converted from text to numeric. Please go to the Feature engineering page and apply the numeric tranformation of column 'Use' first.")
+        return None, None
+    st.write("""
+        The T-Test is used to determine if there is a significant difference between the means of two groups.
+        Here, it compares the 'Su' values (Ultimate Strength) across different 'Use' categories (0 and 1).
+        A low p-value (< 0.05) indicates that the difference between group means is statistically significant.
+        """)    
     numeric_df = df.select_dtypes(include=np.number)
     t_statistic, p_value = ttest_ind(numeric_df[numeric_df['Use'] == 0]['Su'], numeric_df[numeric_df['Use'] == 1]['Su'])
     return t_statistic, p_value
 
 def perform_chi2_test(df):
+    if 'rating' not in df.columns or not pd.api.types.is_numeric_dtype(df['Use']):
+        st.warning("The necessary feature engineering steps were not applied. Please go to the Feature engineering page, apply the numeric tranformation of column 'Use' and also create the 'rating' feature first.")
+        return None, None
+    st.write("""
+        The Chi-Square Test of Independence checks if there is a significant association between two categorical variables.
+        Here, it tests the independence between 'Use' and 'Rating' categories.
+        A low p-value (< 0.05) indicates that the variables are likely associated.
+    """)
     chi2_statistic, chi2_p_value, _, _ = chi2_contingency(pd.crosstab(df['Use'], df['rating']))
     return chi2_statistic, chi2_p_value
 
 def plot_corr_matrix(df):
+    if 'Material' in df.columns:
+        st.warning("The dataframe cannot contain textual information. 'Material' column was not dropped. Please go to the Feature engineering page and drop 'Material' column first.")
+        return
+
     fig, ax = plt.subplots()
     sns.heatmap(df.corr(), annot=True, cmap='coolwarm', fmt=".2f")
     plt.title('Correlation Matrix Heatmap')
@@ -75,14 +95,14 @@ def corr_outliers():
     # Hide Streamlit style components
     hide_streamlit_style()
 
-    if 'df_fe' not in st.session_state:
+    if 'df' not in st.session_state:
         st.warning("No data available. Please go to the 'Main Page' to load the data.")
         return
 
-    df = st.session_state['df_fe']
-    if 'rating' not in df.columns or 'Su/Sy' not in df.columns:
-        st.warning("The dataframe does not contain the necessary columns ('rating' and 'Su/Sy'). Please make sure to apply the necessary feature engineering steps first.")
-        return
+    df = st.session_state['df']
+    # if 'rating' not in df.columns or 'Su/Sy' not in df.columns or 'Material' in df.columns:
+    #     st.warning("The dataframe does not contain the necessary columns ('rating' and 'Su/Sy') and/or 'Material' column ws not dropped. Please make sure to apply the necessary eature engineering steps first.")
+    #     return
 
     st.write("## 🧮 Correlation and Outliers Analysis")
 
@@ -104,25 +124,19 @@ def corr_outliers():
 
     if st.button('Perform T-Test'):
         st.write("### T-Test Analysis")
-        st.write("""
-            The T-Test is used to determine if there is a significant difference between the means of two groups.
-            Here, it compares the 'Su' values (Ultimate Strength) across different 'Use' categories (0 and 1).
-            A low p-value (< 0.05) indicates that the difference between group means is statistically significant.
-        """)
+
         t_statistic, p_value = perform_t_test(df)
-        st.success(f'T-Test Statistic: {t_statistic}')
-        st.success(f'T-Test p-value: {p_value}')
+        if t_statistic is not None and p_value is not None: 
+            st.success(f'T-Test Statistic: {t_statistic}')
+            st.success(f'T-Test p-value: {p_value}')
 
     if st.button('Perform Chi-Square Test'):
         st.write("### Chi-Square Test Analysis")
-        st.write("""
-            The Chi-Square Test of Independence checks if there is a significant association between two categorical variables.
-            Here, it tests the independence between 'Use' and 'Rating' categories.
-            A low p-value (< 0.05) indicates that the variables are likely associated.
-        """)
+
         chi2_statistic, chi2_p_value = perform_chi2_test(df)
-        st.success(f'Chi-Square Statistic: {chi2_statistic}')
-        st.success(f'Chi-Square p-value: {chi2_p_value}')
+        if chi2_statistic is not None and chi2_p_value is not None:
+            st.success(f'Chi-Square Statistic: {chi2_statistic}')
+            st.success(f'Chi-Square p-value: {chi2_p_value}')
 
     st.write("---")
 

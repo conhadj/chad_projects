@@ -65,18 +65,17 @@ def feature_eng():
 
     if st.button('Convert Use to Int'):
         df['Use'] = df['Use'].astype(int)
-        st.session_state['df_fe'] = df
+        st.session_state['df'] = df
         st.success('The "Use" column has been converted to integers.')
 
     if st.button('Create Su/Sy Feature'):
         df['Su/Sy'] = df['Su'] / df['Sy']
-        st.session_state['df_fe'] = df
+        st.session_state['df'] = df
         st.success('The "Su/Sy" feature has been created.')
 
     if st.button('Drop Material Column'):
-        print(df.columns)
         df.drop(["Material"] , axis=1 , inplace=True)
-        st.session_state['df_fe'] = df
+        st.session_state['df'] = df
         st.success('Material column dropped.')
 
 

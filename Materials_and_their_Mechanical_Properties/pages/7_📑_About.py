@@ -13,8 +13,9 @@ def about():
     hide_streamlit_style()
 
     st.write("## 📑 About")
-    st.write("Constantinos Hadjigregoriou")
-    st.write("constantinos.hadjigregoriou@outlook.com")
+    st.write("👤 Constantinos Hadjigregoriou")
+    st.write("📧 [Email](mailto:constantinos.hadjigregoriou@outlook.com)")
+    st.write("🐙 [Project's GitHub Repository](https://github.com/conhadj/chad_projects/tree/main/Materials_and_their_Mechanical_Properties)")
 
 if __name__ == "__main__":
     about()

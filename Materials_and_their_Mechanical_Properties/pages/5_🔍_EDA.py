@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from utils.plot_settings import apply_plot_settings, apply_axes_settings
@@ -11,19 +12,21 @@ st.set_page_config(
 )
 
 def plot_pair_plot(df):
+    numeric_df = df.select_dtypes(include=np.number)
     apply_plot_settings()  # Apply the plot settings
-    pair_plot = sns.pairplot(df, hue='Use', palette='husl')
+    pair_plot = sns.pairplot(numeric_df, hue='Use', palette='husl')
     apply_axes_settings(pair_plot)  # Apply the axes settings
     st.pyplot(pair_plot)
 
 def plot_histograms(df):
+    numeric_df = df.select_dtypes(include=np.number)
     apply_plot_settings()  # Apply the plot settings
 
     fig, axes = plt.subplots(3, 3, figsize=(15, 10))
     axes = axes.flatten()
     
-    for i, column in enumerate(df.columns):
-        sns.histplot(df[column], kde=True, color='skyblue', stat='density', ax=axes[i])
+    for i, column in enumerate(numeric_df.columns):
+        sns.histplot(numeric_df[column], kde=True, color='skyblue', stat='density', ax=axes[i])
         axes[i].set_title(column)
         axes[i].set_xlabel('Values')
         axes[i].set_ylabel('Density')
@@ -34,6 +37,10 @@ def plot_histograms(df):
     st.pyplot(fig)
 
 def plot_box_violin_plots(df):
+    if 'rating' not in df.columns or 'Su/Sy' not in df.columns:
+        st.warning("The necessary feature engineering steps were not applied. Please go to the Feature engineering page and create features 'rating' and 'Su/Sy' first.")
+        return
+
     columns_to_plot = ['Su', 'Sy', 'E', 'G', 'mu', 'Ro', 'rating', 'Su/Sy']
     apply_plot_settings()  # Apply the plot settings
 
@@ -60,6 +67,9 @@ def plot_box_violin_plots(df):
     st.pyplot(fig)
 
 def plot_pair_plot_numerical(df):
+    if 'rating' not in df.columns or 'Su/Sy' not in df.columns:
+        st.warning("The necessary feature engineering steps were not applied. Please go to the Feature engineering page and create features 'rating' and 'Su/Sy' first.")
+        return
     apply_plot_settings()  # Apply the plot settings
 
     pair_plot = sns.pairplot(df, vars=['Su', 'Sy', 'E', 'G', 'mu', 'Ro', 'rating', 'Su/Sy'], kind='scatter')
@@ -93,20 +103,11 @@ def eda():
     # Hide Streamlit style components
     hide_streamlit_style()
 
-    if 'df_fe' not in st.session_state:
-        if 'df' not in st.session_state:
-            df = st.session_state['df']
-        else:
-            st.warning("No data available. Please go to the 'Main Page' to load the data.")
-            return
-
-    df = st.session_state['df_fe']
-    required_columns = ['rating', 'Su/Sy']
-    missing_columns = [col for col in required_columns if col not in df.columns]
-    
-    if missing_columns:
-        st.warning(f"The dataframe does not contain the necessary columns: {', '.join(missing_columns)}. Please make sure to apply the necessary feature engineering steps first.")
+    if 'df' not in st.session_state:
+        st.warning("No data available. Please go to the 'Main Page' to load the data.")
         return
+
+    df = st.session_state['df']
 
     st.write("## 🔍 Exploratory Data Analysis (EDA)")
     st.dataframe(df.head())

@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
@@ -69,6 +70,9 @@ def plot_residual(df):
     st.pyplot(fig)
 
 def plot_swarm(df):
+    if 'rating' not in df.columns or not pd.api.types.is_numeric_dtype(df['Use']):
+        st.warning("The necessary feature engineering steps were not applied. Please go to the Feature engineering page, apply the numeric tranformation of column 'Use' and also create the 'rating' feature first.")
+        return 
     st.write("### Swarm Plot for Use vs. Rating")
     st.write("A swarm plot is useful for visualizing the distribution of a categorical variable. Note: If too many points overlap, some may not be displayed.")
 
@@ -130,12 +134,12 @@ def plot_pairgrid(df):
 
 def plot_complex_relationships(df):
     st.write("### Complex Relationships Plot")
-
+    numeric_df = df.select_dtypes(include=np.number)
     apply_plot_settings()  # Apply the plot settings
 
     # Clustermap
     st.write("#### Correlation Clustermap")
-    cluster_fig = sns.clustermap(df.corr(), cmap='coolwarm', annot=True)
+    cluster_fig = sns.clustermap(numeric_df.corr(), cmap='coolwarm', annot=True)
     plt.setp(cluster_fig.ax_heatmap.get_xticklabels(), rotation=45)
     plt.setp(cluster_fig.ax_heatmap.get_yticklabels(), rotation=0)
     st.pyplot(cluster_fig.fig)
@@ -175,11 +179,11 @@ def further_processing():
     # Hide Streamlit style components
     hide_streamlit_style()
 
-    if 'df_fe' not in st.session_state:
+    if 'df' not in st.session_state:
         st.warning("No data available. Please go to the 'Main Page' to load the data.")
         return
 
-    df = st.session_state['df_fe']
+    df = st.session_state['df']
 
     st.write("## 🗃️ Further Data Processing")
 
