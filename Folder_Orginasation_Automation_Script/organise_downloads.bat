@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM Define the Downloads directory (update if needed)
+REM Define the Downloads directory (change the path to the auto organisation target folder)
 set "DOWNLOADS_DIR=%USERPROFILE%\Downloads"
 
 REM Change to the Downloads directory
