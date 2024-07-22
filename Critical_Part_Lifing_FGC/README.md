@@ -46,3 +46,75 @@ The primary goal of this software is to provide a robust and user-friendly tool 
 ## Example
 
 An example simulation for a titanium plate with a center hole under cyclic tension can be performed by inputting the relevant parameters and running the simulation. The software will predict the number of cycles to failure and provide detailed plots of crack growth over time.
+
+## Installation
+
+### Prerequisites
+
+- Git should be installed on your machine. You can download it from [here](https://git-scm.com/).
+
+### Cloning the Specific Project Folder
+
+To clone only the specific project folder from the repository, follow these steps:
+
+1. **Initialize a Sparse Checkout**:
+   - Open a terminal or command prompt and navigate to the directory where you want to clone the project.
+   - Initialize a new Git repository.
+     ```sh
+     git init
+     ```
+
+2. **Set Sparse Checkout Configuration**:
+   - Enable the sparse-checkout feature.
+     ```sh
+     git config core.sparseCheckout true
+     ```
+
+3. **Define the Folder to be Checked Out**:
+   - Define the project's folder to check out.
+     ```sh
+     echo "Critical_Part_Lifing_FGC/" >> .git/info/sparse-checkout
+     ```
+
+4. **Add Remote Repository**:
+   - Add the remote repository URL.
+     ```sh
+     git remote add -f origin https://github.com/conhadj/chad_projects.git
+     ```
+
+5. **Pull the Specific Folder**:
+   - Pull the specified folder from the repository.
+     ```sh
+     git pull origin main
+     ```
+
+### Running the Executable
+
+To run the program on your local machine, follow these steps:
+
+1. **Navigate to the Executable Directory**:
+   - Open a terminal or command prompt and navigate to the `executable` directory inside the cloned project folder.
+     ```sh
+     cd Critical_Part_Lifing_FGC/executable
+     ```
+
+2. **Run the Executable**:
+   - Locate the `.exe` file inside the `executable` folder. Double-click on the `.exe` file to run the program.
+     - **Windows**: Simply double-click the `CrackGrowthAnalysis.exe` file.
+     - **Command Line**: Alternatively, you can run it from the command line.
+       ```sh
+       CrackGrowthAnalysis.exe
+       ```
+
+### Notes
+
+- **Dependencies**: The executable includes all necessary dependencies and should run without any additional installations.
+<!-- - **Troubleshooting**: If you encounter any issues while running the executable, please check the [Issues](https://github.com/yourusername/your-repo-name/issues) section of the repository or contact us for support.
+
+## Contributing
+
+[Provide information on how others can contribute to your project.]
+
+## License
+
+[Include license information here.] -->
