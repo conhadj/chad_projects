@@ -11,7 +11,7 @@ The goal of this project is to provide a similar tool for analyzing crack growth
 ### Cyclic Loading and Stress Intensity Factor
 
 - **Cyclic Loading**: Repeated application of load or stress on a material. The parameters include maximum stress (\(\sigma_{\text{max}}\)), minimum stress (\(\sigma_{\text{min}}\)), mean stress (\(\sigma_m\)), stress amplitude (\(\sigma_a\)), and stress range (\(\Delta\sigma\)).
-- **Stress Ratio (\(R\))**: Ratio of minimum stress to maximum stress (\(R = \frac{\sigma_{\text{min}}}{\sigma_{\text{max}}}\)).
+- **Stress Ratio (\(R\))**: Ratio of minimum stress to maximum stress \[R = \frac{\sigma_{\text{min}}}{\sigma_{\text{max}}}\].
 - **Stress Intensity Factor**: A function of geometry and applied stress, representing the stress state near the crack tip.
   \[
   K_{\text{max}} = Y \sigma_{\text{max}} \sqrt{\pi a}
