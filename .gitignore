@@ -1,0 +1,16 @@
+ACCESS_Token.txt
+Critical_Part_Lifing_FGC/
+Flask_Course/
+Folder_Orginasation_Automation_Script/demo_editing.tscproj
+Numerical_analysis_and_methods/
+Tkinter_tutorial/
+
+# Ignore Streamlit configuration directory
+Materials_Web_App/.streamlit/
+
+# Ignore Python bytecode cache directories
+Materials_Web_App/pages/__pycache__/
+Materials_Web_App/utils/__pycache__/
+
+# Ignore virtual environment directory
+Materials_Web_App/venv/
