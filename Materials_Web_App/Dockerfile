@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8080
 
 # Set the default command to your app.py
-CMD ["streamlit", "run", "--server.port=8080", "--server.enableCORS=false", "🏠_Main.py"]
+CMD ["streamlit", "run",  "🏠_Main.py", "--server.port=8080", "--server.enableCORS=false"]
